@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#090d16">
+  <meta name="theme-color" content="#080c14">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PackConvert">
   <title>Packaging Converter</title>
-  
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -34,379 +34,269 @@
       }
     }
   </script>
-
   <style>
-    :root {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    input {
-      user-select: text;
-    }
-    /* Hide spin arrows for clean numeric display */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
-    .touch-btn:active {
-      transform: scale(0.97);
-    }
-    @keyframes toastFade {
-      0% { opacity: 0; transform: translateY(-8px); }
-      15% { opacity: 1; transform: translateY(0); }
-      85% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-6px); }
-    }
-    .animate-toast {
-      animation: toastFade 2s ease forwards;
-    }
+    /* Remove default focus ring and outline styling */
+    input:focus { outline: none; }
+    /* Hide clear button in search/text inputs on some webkit engines */
+    input::-webkit-search-decoration,
+    input::-webkit-search-cancel-button { display: none; }
   </style>
 </head>
+<body class="bg-brand-dark text-slate-100 min-h-screen flex flex-col p-3 sm:p-5 select-none font-sans antialiased">
 
-<body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-amber-400 selection:text-black">
-
-  <!-- Header -->
-  <header class="sticky top-0 z-30 bg-brand-surface/90 backdrop-blur border-b border-brand-border px-4 py-3 sm:px-6">
-    <div class="max-w-xl mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-2.5">
-        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-sm">
-          ⚡
+  <div class="max-w-4xl w-full mx-auto flex-1 flex flex-col justify-between">
+    
+    <div>
+      <!-- Header -->
+      <header class="flex items-center justify-between pb-3 border-b border-brand-border/60 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-brand-cases text-lg">⚡</span>
+          <div>
+            <h1 class="text-sm font-bold tracking-wider uppercase text-slate-200">Packaging Converter</h1>
+            <p class="text-[11px] text-slate-400">Cases · Barrels · Pallets</p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-sm font-bold tracking-wider uppercase text-slate-100">Packaging Converter</h1>
-          <p class="text-[10px] text-slate-400">Cases ⇄ Barrels ⇄ Pallets</p>
+        <div class="flex items-center gap-2">
+          <button id="btnCopy" onclick="copyResults()" class="px-3 py-1.5 text-xs font-medium bg-brand-surface border border-brand-border rounded-lg text-slate-300 active:bg-brand-border transition-colors">
+            Copy
+          </button>
+          <button onclick="clearAll()" class="px-3 py-1.5 text-xs font-medium bg-red-950/40 border border-red-900/60 rounded-lg text-red-300 active:bg-red-900/60 transition-colors">
+            Clear
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div class="flex items-center gap-2">
-        <button onclick="copyCurrentValues()" class="touch-btn px-2.5 py-1.5 rounded-lg border border-brand-border bg-brand-card text-xs text-slate-300 hover:text-amber-400 flex items-center gap-1.5" title="Copy breakdown">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-          <span class="text-xs">Copy</span>
-        </button>
-        <button onclick="clearAll()" class="touch-btn px-2.5 py-1.5 rounded-lg border border-red-500/30 bg-red-950/20 text-xs text-red-400 hover:bg-red-900/30">
-          Clear
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-xl w-full mx-auto px-4 py-4 space-y-3.5 flex-1">
-
-    <!-- Configuration Selector -->
-    <section class="bg-brand-surface border border-brand-border rounded-xl p-3.5 shadow-md">
-      <div class="flex items-center justify-between mb-2">
-        <label for="formatSelect" class="text-[11px] font-mono tracking-wider uppercase text-slate-400">
-          Packaging Specification
-        </label>
-        <span id="specBadge" class="text-[11px] font-mono font-semibold text-amber-400">
-          13.78 cs/bbl • 84 cs/plt
-        </span>
-      </div>
-
-      <select id="formatSelect" onchange="handlePresetChange()" class="w-full bg-brand-card border border-brand-border text-slate-100 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-400 font-medium">
-        <option value="24_12">24 / 12 oz Cans or Bottles (13.78 cs/bbl • 84 cs/plt)</option>
-        <option value="24_16">24 / 16 oz Cans (10.33 cs/bbl • 65 cs/plt)</option>
-        <option value="12_12">12 / 12 oz Fridge Packs (27.56 cs/bbl • 140 cs/plt)</option>
-        <option value="custom">Custom Ratios...</option>
-      </select>
-
-      <!-- Custom Settings Drawer -->
-      <div id="customRatiosDrawer" class="hidden mt-3 pt-3 border-t border-brand-border/70 grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-[10px] font-mono text-slate-400 uppercase mb-1">Cases per Barrel</label>
-          <input id="customBblRatio" type="number" step="0.01" value="13.78" oninput="handleCustomChange()" class="w-full bg-brand-card border border-brand-border rounded-lg px-2.5 py-1.5 text-sm font-mono text-amber-400 focus:outline-none focus:border-amber-400">
+      <!-- Specification Selector Card -->
+      <section class="bg-brand-card/90 border border-brand-border rounded-xl p-3.5 mb-3 shadow-lg">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Packaging Specification</span>
+          <span id="specBadge" class="text-[10px] font-mono text-brand-bbl">13.78 cs/bbl • 84 cs/plt</span>
         </div>
-        <div>
-          <label class="block text-[10px] font-mono text-slate-400 uppercase mb-1">Cases per Pallet</label>
-          <input id="customPalletRatio" type="number" step="1" value="84" oninput="handleCustomChange()" class="w-full bg-brand-card border border-brand-border rounded-lg px-2.5 py-1.5 text-sm font-mono text-emerald-400 focus:outline-none focus:border-emerald-400">
+
+        <select id="specSelect" onchange="handleSpecChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 focus:border-brand-bbl transition-colors">
+          <option value="12oz">24 / 12 oz Cans or Bottles (13.78 cs/bbl • 84 cs/plt)</option>
+          <option value="16oz">24 / 16 oz Cans (10.33 cs/bbl • 65 cs/plt)</option>
+          <option value="fridge">12 / 12 oz Fridge Packs (27.56 cs/bbl • 140 cs/plt)</option>
+          <option value="custom">Custom Specification...</option>
+        </select>
+
+        <!-- Custom Inputs Drawer -->
+        <div id="customDrawer" class="hidden grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-brand-border/60">
+          <div>
+            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Cases / Barrel</label>
+            <input type="text" inputmode="decimal" id="customBblInput" value="13.78" oninput="handleCustomChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-100">
+          </div>
+          <div>
+            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Cases / Pallet</label>
+            <input type="text" inputmode="decimal" id="customPltInput" value="84" oninput="handleCustomChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-100">
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- 1. CASES CARD -->
-    <div class="bg-brand-surface border-2 border-amber-500/30 focus-within:border-amber-400 rounded-xl p-4 shadow-lg transition-colors">
-      <div class="flex items-center justify-between mb-1">
-        <label for="casesInput" class="text-xs font-mono font-bold tracking-wider text-amber-400 uppercase flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-          Cases
-        </label>
-        <span class="text-[11px] font-mono text-slate-400">Packaged Units</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <input 
-          id="casesInput" 
-          type="number" 
-          inputmode="decimal" 
-          placeholder="0" 
-          oninput="updateFromCases(this.value)"
-          class="w-full bg-transparent text-4xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none tracking-tight py-1"
-        >
-        <span class="text-sm font-mono font-bold text-amber-400/80 ml-2">cs</span>
-      </div>
+      <!-- Conversion Cards Grid (1 col on cover screen, 3 cols unfolded) -->
+      <main class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        
+        <!-- Cases Card -->
+        <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-cases rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-brand-cases"></span>
+              <span class="text-xs font-bold tracking-wider text-brand-cases uppercase">Cases</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-medium">Packaged Units</span>
+          </div>
+          <div class="flex items-baseline justify-between gap-2 mt-1">
+            <input type="text" inputmode="decimal" id="valCases" placeholder="0" 
+                   oninput="calcFromCases()" onfocus="handleFocus(this)" onblur="handleBlur(this, 1)"
+                   class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
+            <span class="font-mono text-xs font-semibold text-brand-cases/80">cs</span>
+          </div>
+        </div>
+
+        <!-- Barrels Card -->
+        <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-bbl rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-brand-bbl"></span>
+              <span class="text-xs font-bold tracking-wider text-brand-bbl uppercase">Barrels (BBL)</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-medium">31 US Gal / bbl</span>
+          </div>
+          <div class="flex items-baseline justify-between gap-2 mt-1">
+            <input type="text" inputmode="decimal" id="valBbl" placeholder="0.00" 
+                   oninput="calcFromBbl()" onfocus="handleFocus(this)" onblur="handleBlur(this, 2)"
+                   class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
+            <span class="font-mono text-xs font-semibold text-brand-bbl/80">bbl</span>
+          </div>
+        </div>
+
+        <!-- Pallets Card -->
+        <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-pallet rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-1">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-brand-pallet"></span>
+              <span class="text-xs font-bold tracking-wider text-brand-pallet uppercase">Pallets</span>
+            </div>
+            <span id="pltCardSubtext" class="text-[10px] text-slate-400 font-medium font-mono">@ 84 cs/plt</span>
+          </div>
+          <div class="flex items-baseline justify-between gap-2 mt-1">
+            <input type="text" inputmode="decimal" id="valPallets" placeholder="0.00" 
+                   oninput="calcFromPallets()" onfocus="handleFocus(this)" onblur="handleBlur(this, 2)"
+                   class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
+            <span class="font-mono text-xs font-semibold text-brand-pallet/80">plt</span>
+          </div>
+        </div>
+
+      </main>
     </div>
 
-    <!-- 2. BARRELS (BBL) CARD -->
-    <div class="bg-brand-surface border-2 border-sky-500/30 focus-within:border-sky-400 rounded-xl p-4 shadow-lg transition-colors">
-      <div class="flex items-center justify-between mb-1">
-        <label for="bblInput" class="text-xs font-mono font-bold tracking-wider text-sky-400 uppercase flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-          Barrels (bbl)
-        </label>
-        <span id="gallonsLabel" class="text-[11px] font-mono text-slate-400">31 US Gal / bbl</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <input 
-          id="bblInput" 
-          type="number" 
-          step="any"
-          inputmode="decimal" 
-          placeholder="0.00" 
-          oninput="updateFromBbl(this.value)"
-          class="w-full bg-transparent text-4xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none tracking-tight py-1"
-        >
-        <span class="text-sm font-mono font-bold text-sky-400/80 ml-2">bbl</span>
-      </div>
-    </div>
+    <!-- Bottom Tip -->
+    <footer class="text-center py-4">
+      <p class="text-[11px] text-slate-500 font-medium">Tip: Works completely offline on outer cover screen or unfolded display.</p>
+    </footer>
 
-    <!-- 3. PALLETS CARD -->
-    <div class="bg-brand-surface border-2 border-emerald-500/30 focus-within:border-emerald-400 rounded-xl p-4 shadow-lg transition-colors">
-      <div class="flex items-center justify-between mb-1">
-        <label for="palletsInput" class="text-xs font-mono font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-          Pallets
-        </label>
-        <span id="palletSubLabel" class="text-[11px] font-mono text-slate-400">@ 84 cs/plt</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <input 
-          id="palletsInput" 
-          type="number" 
-          step="any"
-          inputmode="decimal" 
-          placeholder="0.00" 
-          oninput="updateFromPallets(this.value)"
-          class="w-full bg-transparent text-4xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none tracking-tight py-1"
-        >
-        <span class="text-sm font-mono font-bold text-emerald-400/80 ml-2">plt</span>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- Toast alert -->
-  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none hidden">
-    <div class="bg-brand-surface border border-amber-400 text-amber-300 text-xs px-3.5 py-2 rounded-xl shadow-xl flex items-center gap-2 font-mono">
-      <span>📋</span>
-      <span id="toastMsg">Copied to clipboard</span>
-    </div>
   </div>
 
-  <!-- Minimal Footer -->
-  <footer class="bg-brand-surface/60 border-t border-brand-border px-4 py-2.5 text-center text-slate-400 text-[11px] font-mono">
-    Tip: Add to Home Screen in Chrome for instant offline cover-screen access.
-  </footer>
-
   <script>
-    // Preset Specifications
-    const PRESETS = {
-      '24_12': { casesPerBbl: 3968 / 288, casesPerPallet: 84, label: '13.78 cs/bbl • 84 cs/plt' },
-      '24_16': { casesPerBbl: 3968 / 384, casesPerPallet: 65, label: '10.33 cs/bbl • 65 cs/plt' },
-      '12_12': { casesPerBbl: 3968 / 144, casesPerPallet: 140, label: '27.56 cs/bbl • 140 cs/plt' },
-      'custom': { casesPerBbl: 13.78, casesPerPallet: 84, label: 'Custom Specification' }
-    };
+    let csPerBbl = 13.78;
+    let csPerPlt = 84;
 
-    let casesPerBbl = PRESETS['24_12'].casesPerBbl;
-    let casesPerPallet = PRESETS['24_12'].casesPerPallet;
-    let lastActiveField = 'cases';
+    const inCases = document.getElementById('valCases');
+    const inBbl = document.getElementById('valBbl');
+    const inPlt = document.getElementById('valPallets');
+    const specBadge = document.getElementById('specBadge');
+    const pltCardSubtext = document.getElementById('pltCardSubtext');
+    const specSelect = document.getElementById('specSelect');
+    const customDrawer = document.getElementById('customDrawer');
+    const customBblInput = document.getElementById('customBblInput');
+    const customPltInput = document.getElementById('customPltInput');
+    const btnCopy = document.getElementById('btnCopy');
 
-    // Dom elements
-    const elCases = document.getElementById('casesInput');
-    const elBbl = document.getElementById('bblInput');
-    const elPallets = document.getElementById('palletsInput');
-    const elFormat = document.getElementById('formatSelect');
-    const elSpecBadge = document.getElementById('specBadge');
-    const elPalletSubLabel = document.getElementById('palletSubLabel');
-    const elGallonsLabel = document.getElementById('gallonsLabel');
-    const customDrawer = document.getElementById('customRatiosDrawer');
-    const elCustomBbl = document.getElementById('customBblRatio');
-    const elCustomPallet = document.getElementById('customPalletRatio');
-
-    // Clean formatting helper
-    function cleanFormat(num) {
-      if (isNaN(num) || num === 0) return '';
-      // If integer, return as integer; otherwise 2 decimals
-      return Number.isInteger(num) ? num.toString() : parseFloat(num.toFixed(2)).toString();
+    // Strip commas and parse raw float
+    function parseRaw(val) {
+      if (!val) return NaN;
+      return parseFloat(val.toString().replace(/,/g, ''));
     }
 
-    function updateFromCases(valStr) {
-      lastActiveField = 'cases';
-      if (!valStr || isNaN(parseFloat(valStr))) {
-        clearOtherInputs('cases');
+    // Format number with thousands commas
+    function formatWithCommas(num, maxDecimals = 2) {
+      if (num === null || num === undefined || isNaN(num) || num === '') return '';
+      return Number(num).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: maxDecimals
+      });
+    }
+
+    // Live calculations: other fields update with commas immediately
+    function calcFromCases() {
+      const c = parseRaw(inCases.value);
+      if (isNaN(c) || inCases.value.trim() === '') {
+        inBbl.value = '';
+        inPlt.value = '';
         return;
       }
-      const cases = parseFloat(valStr);
-      const bbl = cases / casesPerBbl;
-      const pallets = cases / casesPallet;
-
-      elBbl.value = cleanFormat(bbl);
-      elPallets.value = cleanFormat(pallets);
-      updateSubLabels(cases, bbl);
+      inBbl.value = formatWithCommas(c / csPerBbl, 2);
+      inPlt.value = formatWithCommas(c / csPerPlt, 2);
     }
 
-    function updateFromBbl(valStr) {
-      lastActiveField = 'bbl';
-      if (!valStr || isNaN(parseFloat(valStr))) {
-        clearOtherInputs('bbl');
+    function calcFromBbl() {
+      const b = parseRaw(inBbl.value);
+      if (isNaN(b) || inBbl.value.trim() === '') {
+        inCases.value = '';
+        inPlt.value = '';
         return;
       }
-      const bbl = parseFloat(valStr);
-      const cases = bbl * casesPerBbl;
-      const pallets = cases / casesPallet;
-
-      elCases.value = cleanFormat(Math.round(cases * 100) / 100);
-      elPallets.value = cleanFormat(pallets);
-      updateSubLabels(cases, bbl);
+      const c = b * csPerBbl;
+      inCases.value = formatWithCommas(c, 1);
+      inPlt.value = formatWithCommas(c / csPerPlt, 2);
     }
 
-    function updateFromPallets(valStr) {
-      lastActiveField = 'pallets';
-      if (!valStr || isNaN(parseFloat(valStr))) {
-        clearOtherInputs('pallets');
+    function calcFromPallets() {
+      const p = parseRaw(inPlt.value);
+      if (isNaN(p) || inPlt.value.trim() === '') {
+        inCases.value = '';
+        inBbl.value = '';
         return;
       }
-      const pallets = parseFloat(valStr);
-      const cases = pallets * casesPallet;
-      const bbl = cases / casesPerBbl;
-
-      elCases.value = cleanFormat(Math.round(cases * 100) / 100);
-      elBbl.value = cleanFormat(bbl);
-      updateSubLabels(cases, bbl);
+      const c = p * csPerPlt;
+      inCases.value = formatWithCommas(c, 1);
+      inBbl.value = formatWithCommas(c / csPerBbl, 2);
     }
 
-    function updateSubLabels(cases, bbl) {
-      if (bbl > 0) {
-        elGallonsLabel.innerText = `≈ ${(bbl * 31).toFixed(1)} US Gal`;
-      } else {
-        elGallonsLabel.innerText = '31 US Gal / bbl';
+    // Format the active field when tapping away
+    function handleBlur(input, maxDecimals) {
+      const raw = parseRaw(input.value);
+      if (!isNaN(raw) && input.value.trim() !== '') {
+        input.value = formatWithCommas(raw, maxDecimals);
       }
     }
 
-    function clearOtherInputs(source) {
-      if (source !== 'cases') elCases.value = '';
-      if (source !== 'bbl') elBbl.value = '';
-      if (source !== 'pallets') elPallets.value = '';
-      elGallonsLabel.innerText = '31 US Gal / bbl';
+    // Select text on tap for effortless overwrite/editing
+    function handleFocus(input) {
+      setTimeout(() => input.select(), 50);
     }
 
-    function clearAll() {
-      elCases.value = '';
-      elBbl.value = '';
-      elPallets.value = '';
-      elGallonsLabel.innerText = '31 US Gal / bbl';
-      elCases.focus();
-    }
-
-    function handlePresetChange() {
-      const selected = elFormat.value;
-      if (selected === 'custom') {
-        customDrawer.classList.remove('hidden');
-        casesPerBbl = parseFloat(elCustomBbl.value) || 13.78;
-        casesPallet = parseFloat(elCustomPallet.value) || 84;
-        elSpecBadge.innerText = `${casesPerBbl.toFixed(2)} cs/bbl • ${casesPallet} cs/plt`;
-      } else {
+    // Specification handling
+    function handleSpecChange() {
+      const val = specSelect.value;
+      if (val === '12oz') {
+        csPerBbl = 13.78;
+        csPerPlt = 84;
         customDrawer.classList.add('hidden');
-        casesPerBbl = PRESETS[selected].casesPerBbl;
-        casesPallet = PRESETS[selected].casesPerPallet;
-        elSpecBadge.innerText = PRESETS[selected].label;
+      } else if (val === '16oz') {
+        csPerBbl = 10.33;
+        csPerPlt = 65;
+        customDrawer.classList.add('hidden');
+      } else if (val === 'fridge') {
+        csPerBbl = 27.56;
+        csPerPlt = 140;
+        customDrawer.classList.add('hidden');
+      } else if (val === 'custom') {
+        customDrawer.classList.remove('hidden');
+        handleCustomChange();
+        return;
       }
-
-      elPalletSubLabel.innerText = `@ ${casesPallet} cs/plt`;
-
-      // Recalculate using the active input value
-      if (lastActiveField === 'cases') updateFromCases(elCases.value);
-      else if (lastActiveField === 'bbl') updateFromBbl(elBbl.value);
-      else if (lastActiveField === 'pallets') updateFromPallets(elPallets.value);
-      saveState();
+      updateLabels();
+      recalculate();
     }
 
     function handleCustomChange() {
-      const bblRatio = parseFloat(elCustomBbl.value);
-      const palletRatio = parseFloat(elCustomPallet.value);
-      if (bblRatio > 0) casesPerBbl = bblRatio;
-      if (palletRatio > 0) casesPallet = palletRatio;
-
-      elSpecBadge.innerText = `${casesPerBbl.toFixed(2)} cs/bbl • ${casesPallet} cs/plt`;
-      elPalletSubLabel.innerText = `@ ${casesPallet} cs/plt`;
-
-      if (lastActiveField === 'cases') updateFromCases(elCases.value);
-      else if (lastActiveField === 'bbl') updateFromBbl(elBbl.value);
-      else if (lastActiveField === 'pallets') updateFromPallets(elPallets.value);
-      saveState();
+      const bbl = parseRaw(customBblInput.value);
+      const plt = parseRaw(customPltInput.value);
+      if (!isNaN(bbl) && bbl > 0) csPerBbl = bbl;
+      if (!isNaN(plt) && plt > 0) csPerPlt = plt;
+      updateLabels();
+      recalculate();
     }
 
-    function copyCurrentValues() {
-      const c = elCases.value || '0';
-      const b = elBbl.value || '0';
-      const p = elPallets.value || '0';
-      const text = `${c} Cases = ${b} bbl = ${p} Pallets`;
-
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.setAttribute('readonly', '');
-      ta.style.position = 'absolute';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        showToast(`Copied: ${text}`);
-      } catch (e) {
-        showToast('Unable to copy');
-      }
-      document.body.removeChild(ta);
+    function updateLabels() {
+      specBadge.textContent = `${csPerBbl} cs/bbl • ${csPerPlt} cs/plt`;
+      pltCardSubtext.textContent = `@ ${csPerPlt} cs/plt`;
     }
 
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').innerText = msg;
-      toast.classList.remove('hidden');
-      toast.classList.add('animate-toast');
-      setTimeout(() => {
-        toast.classList.remove('animate-toast');
-        toast.classList.add('hidden');
-      }, 2000);
+    function recalculate() {
+      if (document.activeElement === inBbl) calcFromBbl();
+      else if (document.activeElement === inPlt) calcFromPallets();
+      else calcFromCases();
     }
 
-    function saveState() {
-      try {
-        localStorage.setItem('packconvert_minimal_preset', JSON.stringify({
-          format: elFormat.value,
-          customBbl: elCustomBbl.value,
-          customPallet: elCustomPallet.value
-        }));
-      } catch (e) {}
+    function clearAll() {
+      inCases.value = '';
+      inBbl.value = '';
+      inPlt.value = '';
+      inCases.focus();
     }
 
-    function loadState() {
-      try {
-        const raw = localStorage.getItem('packconvert_minimal_preset');
-        if (raw) {
-          const data = JSON.parse(raw);
-          if (data.format) elFormat.value = data.format;
-          if (data.customBbl) elCustomBbl.value = data.customBbl;
-          if (data.customPallet) elCustomPallet.value = data.customPallet;
-          handlePresetChange();
-        }
-      } catch (e) {}
+    function copyResults() {
+      const c = inCases.value || '0';
+      const b = inBbl.value || '0';
+      const p = inPlt.value || '0';
+      const text = `${c} cs = ${b} bbl = ${p} plt (${specSelect.options[specSelect.selectedIndex].text.split('(')[0].trim()})`;
+      navigator.clipboard.writeText(text).then(() => {
+        btnCopy.textContent = 'Copied!';
+        setTimeout(() => btnCopy.textContent = 'Copy', 1500);
+      });
     }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadState();
-    });
   </script>
 </body>
 </html>
