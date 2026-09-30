@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PackConvert">
+  <title>Packaging Converter</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#080c14',
+              surface: '#0f172a',
+              card: '#141e33',
+              border: '#1e293b',
+              cases: '#f59e0b',
+              bbl: '#38bdf8',
+              pallet: '#10b981'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input {
+      user-select: text;
+    }
+    /* Hide spin arrows for clean numeric display */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    .touch-btn:active {
+      transform: scale(0.97);
+    }
+    @keyframes toastFade {
+      0% { opacity: 0; transform: translateY(-8px); }
+      15% { opacity: 1; transform: translateY(0); }
+      85% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-6px); }
+    }
+    .animate-toast {
+      animation: toastFade 2s ease forwards;
+    }
+  </style>
+</head>
+
+<body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-amber-400 selection:text-black">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-brand-surface/90 backdrop-blur border-b border-brand-border px-4 py-3 sm:px-6">
+    <div class="max-w-xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-sm">
+          ⚡
+        </div>
+        <div>
+          <h1 class="text-sm font-bold tracking-wider uppercase text-slate-100">Packaging Converter</h1>
+          <p class="text-[10px] text-slate-400">Cases ⇄ Barrels ⇄ Pallets</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="copyCurrentValues()" class="touch-btn px-2.5 py-1.5 rounded-lg border border-brand-border bg-brand-card text-xs text-slate-300 hover:text-amber-400 flex items-center gap-1.5" title="Copy breakdown">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+          <span class="text-xs">Copy</span>
+        </button>
+        <button onclick="clearAll()" class="touch-btn px-2.5 py-1.5 rounded-lg border border-red-500/30 bg-red-950/20 text-xs text-red-400 hover:bg-red-900/30">
+          Clear
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-xl w-full mx-auto px-4 py-4 space-y-3.5 flex-1">
+
+    <!-- Configuration Selector -->
+    <section class="bg-brand-surface border border-brand-border rounded-xl p-3.5 shadow-md">
+      <div class="flex items-center justify-between mb-2">
+        <label for="formatSelect" class="text-[11px] font-mono tracking-wider uppercase text-slate-400">
+          Packaging Specification
+        </label>
+        <span id="specBadge" class="text-[11px] font-mono font-semibold text-amber-400">
+          13.78 cs/bbl • 84 cs/plt
+        </span>
+      </div>
+
+      <select id="formatSelect" onchange="handlePresetChange()" class="w-full bg-brand-card border border-brand-border text-slate-100 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-400 font-medium">
+        <option value="24_12">24 / 12 oz Cans or Bottles (13.78 cs/bbl • 84 cs/plt)</option>
+        <option value="24_16">24 / 16 oz Cans (10.33 cs/bbl • 65 cs/plt)</option>
+        <option value="12_12">12 / 12 oz Fridge Packs (27.56 cs/bbl • 140 cs/plt)</option>
+        <option value="custom">Custom Ratios...</option>
+      </select>
+
+      <!-- Custom Settings Drawer -->
+      <div id="customRatiosDrawer" class="hidden mt-3 pt-3 border-t border-brand-border/70 grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-mono text-slate-400 uppercase mb-1">Cases per Barrel</label>
+          <input id="customBblRatio" type="number" step="0.01" value="13.78" oninput="handleCustomChange()" class="w-full bg-brand-card border border-brand-border rounded-lg px-2.5 py-1.5 text-sm font-mono text-amber-400 focus:outline-none focus:border-amber-400">
+        </div>
+        <div>
+          <label class="block text-[10px] font-mono text-slate-400 uppercase mb-1">Cases per Pallet</label>
+          <input id="customPalletRatio" type="number" step="1" value="84" oninput="handleCustomChange()" class="w-full bg-brand-card border border-brand-border rounded-lg px-2.5 py-1.5 text-sm font-mono text-emerald-400 focus:outline-none focus:border-emerald-400">
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. CASES CARD -->
+    <div class="bg-brand-surface border-2 border-amber-500/30 focus-within:border-amber-400 rounded-xl p-4 shadow-lg transition-colors">
+      <div class="flex items-center justify-between mb-1">
+        <label for="casesInput" class="text-xs font-mono font-bold tracking-wider text-amber-400 uppercase flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          Cases
+        </label>
+        <span class="text-[11px] font-mono text-slate-400">Packaged Units</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <input 
+          id="casesInput" 
+          type="number" 
+          inputmode="decimal" 
+          placeholder="0" 
+          oninput="updateFromCases(this.value)"
+          class="w-full bg-transparent text-4xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none tracking-tight py-1"
+        >
+        <span class="text-sm font-mono font-bold text-amber-400/80 ml-2">cs</span>
+      </div>
+    </div>
+
+    <!-- 2. BARRELS (BBL) CARD -->
+    <div class="bg-brand-surface border-2 border-sky-500/30 focus-within:border-sky-400 rounded-xl p-4 shadow-lg transition-colors">
+      <div class="flex items-center justify-between mb-1">
+        <label for="bblInput" class="text-xs font-mono font-bold tracking-wider text-sky-400 uppercase flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+          Barrels (bbl)
+        </label>
+        <span id="gallonsLabel" class="text-[11px] font-mono text-slate-400">31 US Gal / bbl</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <input 
+          id="bblInput" 
+          type="number" 
+          step="any"
+          inputmode="decimal" 
+          placeholder="0.00" 
+          oninput="updateFromBbl(this.value)"
+          class="w-full bg-transparent text-4xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none tracking-tight py-1"
+        >
+        <span class="text-sm font-mono font-bold text-sky-400/80 ml-2">bbl</span>
+      </div>
+    </div>
+
+    <!-- 3. PALLETS CARD -->
+    <div class="bg-brand-surface border-2 border-emerald-500/30 focus-within:border-emerald-400 rounded-xl p-4 shadow-lg transition-colors">
+      <div class="flex items-center justify-between mb-1">
+        <label for="palletsInput" class="text-xs font-mono font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          Pallets
+        </label>
+        <span id="palletSubLabel" class="text-[11px] font-mono text-slate-400">@ 84 cs/plt</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <input 
+          id="palletsInput" 
+          type="number" 
+          step="any"
+          inputmode="decimal" 
+          placeholder="0.00" 
+          oninput="updateFromPallets(this.value)"
+          class="w-full bg-transparent text-4xl font-bold font-mono text-white placeholder-slate-600 focus:outline-none tracking-tight py-1"
+        >
+        <span class="text-sm font-mono font-bold text-emerald-400/80 ml-2">plt</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast alert -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none hidden">
+    <div class="bg-brand-surface border border-amber-400 text-amber-300 text-xs px-3.5 py-2 rounded-xl shadow-xl flex items-center gap-2 font-mono">
+      <span>📋</span>
+      <span id="toastMsg">Copied to clipboard</span>
+    </div>
+  </div>
+
+  <!-- Minimal Footer -->
+  <footer class="bg-brand-surface/60 border-t border-brand-border px-4 py-2.5 text-center text-slate-400 text-[11px] font-mono">
+    Tip: Add to Home Screen in Chrome for instant offline cover-screen access.
+  </footer>
+
+  <script>
+    // Preset Specifications
+    const PRESETS = {
+      '24_12': { casesPerBbl: 3968 / 288, casesPerPallet: 84, label: '13.78 cs/bbl • 84 cs/plt' },
+      '24_16': { casesPerBbl: 3968 / 384, casesPerPallet: 65, label: '10.33 cs/bbl • 65 cs/plt' },
+      '12_12': { casesPerBbl: 3968 / 144, casesPerPallet: 140, label: '27.56 cs/bbl • 140 cs/plt' },
+      'custom': { casesPerBbl: 13.78, casesPerPallet: 84, label: 'Custom Specification' }
+    };
+
+    let casesPerBbl = PRESETS['24_12'].casesPerBbl;
+    let casesPerPallet = PRESETS['24_12'].casesPerPallet;
+    let lastActiveField = 'cases';
+
+    // Dom elements
+    const elCases = document.getElementById('casesInput');
+    const elBbl = document.getElementById('bblInput');
+    const elPallets = document.getElementById('palletsInput');
+    const elFormat = document.getElementById('formatSelect');
+    const elSpecBadge = document.getElementById('specBadge');
+    const elPalletSubLabel = document.getElementById('palletSubLabel');
+    const elGallonsLabel = document.getElementById('gallonsLabel');
+    const customDrawer = document.getElementById('customRatiosDrawer');
+    const elCustomBbl = document.getElementById('customBblRatio');
+    const elCustomPallet = document.getElementById('customPalletRatio');
+
+    // Clean formatting helper
+    function cleanFormat(num) {
+      if (isNaN(num) || num === 0) return '';
+      // If integer, return as integer; otherwise 2 decimals
+      return Number.isInteger(num) ? num.toString() : parseFloat(num.toFixed(2)).toString();
+    }
+
+    function updateFromCases(valStr) {
+      lastActiveField = 'cases';
+      if (!valStr || isNaN(parseFloat(valStr))) {
+        clearOtherInputs('cases');
+        return;
+      }
+      const cases = parseFloat(valStr);
+      const bbl = cases / casesPerBbl;
+      const pallets = cases / casesPallet;
+
+      elBbl.value = cleanFormat(bbl);
+      elPallets.value = cleanFormat(pallets);
+      updateSubLabels(cases, bbl);
+    }
+
+    function updateFromBbl(valStr) {
+      lastActiveField = 'bbl';
+      if (!valStr || isNaN(parseFloat(valStr))) {
+        clearOtherInputs('bbl');
+        return;
+      }
+      const bbl = parseFloat(valStr);
+      const cases = bbl * casesPerBbl;
+      const pallets = cases / casesPallet;
+
+      elCases.value = cleanFormat(Math.round(cases * 100) / 100);
+      elPallets.value = cleanFormat(pallets);
+      updateSubLabels(cases, bbl);
+    }
+
+    function updateFromPallets(valStr) {
+      lastActiveField = 'pallets';
+      if (!valStr || isNaN(parseFloat(valStr))) {
+        clearOtherInputs('pallets');
+        return;
+      }
+      const pallets = parseFloat(valStr);
+      const cases = pallets * casesPallet;
+      const bbl = cases / casesPerBbl;
+
+      elCases.value = cleanFormat(Math.round(cases * 100) / 100);
+      elBbl.value = cleanFormat(bbl);
+      updateSubLabels(cases, bbl);
+    }
+
+    function updateSubLabels(cases, bbl) {
+      if (bbl > 0) {
+        elGallonsLabel.innerText = `≈ ${(bbl * 31).toFixed(1)} US Gal`;
+      } else {
+        elGallonsLabel.innerText = '31 US Gal / bbl';
+      }
+    }
+
+    function clearOtherInputs(source) {
+      if (source !== 'cases') elCases.value = '';
+      if (source !== 'bbl') elBbl.value = '';
+      if (source !== 'pallets') elPallets.value = '';
+      elGallonsLabel.innerText = '31 US Gal / bbl';
+    }
+
+    function clearAll() {
+      elCases.value = '';
+      elBbl.value = '';
+      elPallets.value = '';
+      elGallonsLabel.innerText = '31 US Gal / bbl';
+      elCases.focus();
+    }
+
+    function handlePresetChange() {
+      const selected = elFormat.value;
+      if (selected === 'custom') {
+        customDrawer.classList.remove('hidden');
+        casesPerBbl = parseFloat(elCustomBbl.value) || 13.78;
+        casesPallet = parseFloat(elCustomPallet.value) || 84;
+        elSpecBadge.innerText = `${casesPerBbl.toFixed(2)} cs/bbl • ${casesPallet} cs/plt`;
+      } else {
+        customDrawer.classList.add('hidden');
+        casesPerBbl = PRESETS[selected].casesPerBbl;
+        casesPallet = PRESETS[selected].casesPerPallet;
+        elSpecBadge.innerText = PRESETS[selected].label;
+      }
+
+      elPalletSubLabel.innerText = `@ ${casesPallet} cs/plt`;
+
+      // Recalculate using the active input value
+      if (lastActiveField === 'cases') updateFromCases(elCases.value);
+      else if (lastActiveField === 'bbl') updateFromBbl(elBbl.value);
+      else if (lastActiveField === 'pallets') updateFromPallets(elPallets.value);
+      saveState();
+    }
+
+    function handleCustomChange() {
+      const bblRatio = parseFloat(elCustomBbl.value);
+      const palletRatio = parseFloat(elCustomPallet.value);
+      if (bblRatio > 0) casesPerBbl = bblRatio;
+      if (palletRatio > 0) casesPallet = palletRatio;
+
+      elSpecBadge.innerText = `${casesPerBbl.toFixed(2)} cs/bbl • ${casesPallet} cs/plt`;
+      elPalletSubLabel.innerText = `@ ${casesPallet} cs/plt`;
+
+      if (lastActiveField === 'cases') updateFromCases(elCases.value);
+      else if (lastActiveField === 'bbl') updateFromBbl(elBbl.value);
+      else if (lastActiveField === 'pallets') updateFromPallets(elPallets.value);
+      saveState();
+    }
+
+    function copyCurrentValues() {
+      const c = elCases.value || '0';
+      const b = elBbl.value || '0';
+      const p = elPallets.value || '0';
+      const text = `${c} Cases = ${b} bbl = ${p} Pallets`;
+
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'absolute';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(`Copied: ${text}`);
+      } catch (e) {
+        showToast('Unable to copy');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.remove('hidden');
+      toast.classList.add('animate-toast');
+      setTimeout(() => {
+        toast.classList.remove('animate-toast');
+        toast.classList.add('hidden');
+      }, 2000);
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('packconvert_minimal_preset', JSON.stringify({
+          format: elFormat.value,
+          customBbl: elCustomBbl.value,
+          customPallet: elCustomPallet.value
+        }));
+      } catch (e) {}
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('packconvert_minimal_preset');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.format) elFormat.value = data.format;
+          if (data.customBbl) elCustomBbl.value = data.customBbl;
+          if (data.customPallet) elCustomPallet.value = data.customPallet;
+          handlePresetChange();
+        }
+      } catch (e) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+    });
+  </script>
+</body>
+</html>
