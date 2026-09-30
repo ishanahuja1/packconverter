@@ -42,133 +42,130 @@
 </head>
 <body class="bg-brand-dark text-slate-100 min-h-screen flex flex-col p-3 sm:p-5 select-none font-sans antialiased">
 
-  <div class="max-w-4xl w-full mx-auto flex-1 flex flex-col justify-between">
+  <div class="max-w-4xl w-full mx-auto flex flex-col">
     
-    <div>
-      <!-- Header -->
-      <header class="flex items-center gap-2 pb-3 border-b border-brand-border/60 mb-3">
-        <span class="text-brand-cases text-lg">⚡</span>
+    <!-- Header -->
+    <header class="flex items-center gap-2 pb-3 border-b border-brand-border/60 mb-3">
+      <span class="text-brand-cases text-lg">⚡</span>
+      <div>
+        <h1 class="text-sm font-bold tracking-wider uppercase text-slate-200">Packaging Converter</h1>
+        <p class="text-[11px] text-slate-400">Cases · Barrels · Pallets</p>
+      </div>
+    </header>
+
+    <!-- Specifications Section -->
+    <section class="bg-brand-card/90 border border-brand-border rounded-xl p-3.5 mb-3 shadow-lg">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Production Specifications</span>
+        <span id="specBadge" class="text-[10px] font-mono text-brand-bbl">13.78 cs/bbl • 84 cs/plt</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <!-- Package Size (Cases / BBL) -->
         <div>
-          <h1 class="text-sm font-bold tracking-wider uppercase text-slate-200">Packaging Converter</h1>
-          <p class="text-[11px] text-slate-400">Cases · Barrels · Pallets</p>
-        </div>
-      </header>
-
-      <!-- Specifications Section -->
-      <section class="bg-brand-card/90 border border-brand-border rounded-xl p-3.5 mb-3 shadow-lg">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Production Specifications</span>
-          <span id="specBadge" class="text-[10px] font-mono text-brand-bbl">13.78 cs/bbl • 84 cs/plt</span>
+          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Package Size</label>
+          <select id="pkgSelect" onchange="handlePkgChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-200 focus:border-brand-bbl transition-colors">
+            <option value="12oz">24 / 12 oz (13.78 cs/bbl)</option>
+            <option value="16oz">24 / 16 oz (10.33 cs/bbl)</option>
+            <option value="fridge">12 / 12 oz Fridge Pack (27.56 cs/bbl)</option>
+            <option value="19oz">24 / 19.2 oz (8.61 cs/bbl)</option>
+            <option value="custom">Custom cs/bbl...</option>
+          </select>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <!-- Package Size (Cases / BBL) -->
-          <div>
-            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Package Size</label>
-            <select id="pkgSelect" onchange="handlePkgChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-200 focus:border-brand-bbl transition-colors">
-              <option value="12oz">24 / 12 oz (13.78 cs/bbl)</option>
-              <option value="16oz">24 / 16 oz (10.33 cs/bbl)</option>
-              <option value="fridge">12 / 12 oz Fridge Pack (27.56 cs/bbl)</option>
-              <option value="19oz">24 / 19.2 oz (8.61 cs/bbl)</option>
-              <option value="custom">Custom cs/bbl...</option>
-            </select>
-          </div>
-
-          <!-- Pallet Size (Cases / Pallet) -->
-          <div>
-            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Pallet Configuration</label>
-            <select id="pltSelect" onchange="handlePltChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-200 focus:border-brand-pallet transition-colors">
-              <option value="84">84 cases (Standard 12 oz)</option>
-              <option value="70">70 cases (5-layer 12 oz)</option>
-              <option value="65">65 cases (Standard 16 oz)</option>
-              <option value="60">60 cases (5-layer 16 oz)</option>
-              <option value="140">140 cases (12-pack fridge)</option>
-              <option value="168">168 cases (High-cube fridge)</option>
-              <option value="custom">Custom cs/plt...</option>
-            </select>
-          </div>
+        <!-- Pallet Size (Cases / Pallet) -->
+        <div>
+          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Pallet Configuration</label>
+          <select id="pltSelect" onchange="handlePltChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-200 focus:border-brand-pallet transition-colors">
+            <option value="84">84 cases (Standard 12 oz)</option>
+            <option value="70">70 cases (5-layer 12 oz)</option>
+            <option value="65">65 cases (Standard 16 oz)</option>
+            <option value="60">60 cases (5-layer 16 oz)</option>
+            <option value="140">140 cases (12-pack fridge)</option>
+            <option value="168">168 cases (High-cube fridge)</option>
+            <option value="custom">Custom cs/plt...</option>
+          </select>
         </div>
+      </div>
 
-        <!-- Custom Specification Inputs Drawer -->
-        <div id="customDrawer" class="hidden grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-brand-border/60">
-          <div id="customBblWrapper">
-            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Custom Cases / BBL</label>
-            <input type="text" inputmode="decimal" id="customBblInput" value="13.78" oninput="handleCustomChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-100">
-          </div>
-          <div id="customPltWrapper">
-            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Custom Cases / Pallet</label>
-            <input type="text" inputmode="decimal" id="customPltInput" value="84" oninput="handleCustomChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-100">
-          </div>
+      <!-- Custom Specification Inputs Drawer -->
+      <div id="customDrawer" class="hidden grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-brand-border/60">
+        <div id="customBblWrapper">
+          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Custom Cases / BBL</label>
+          <input type="text" inputmode="decimal" id="customBblInput" value="13.78" oninput="handleCustomChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-100">
         </div>
-      </section>
-
-      <!-- Conversion Cards Grid (1 col on cover screen, 3 cols unfolded) -->
-      <main class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        
-        <!-- Cases Card -->
-        <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-cases rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
-          <div class="flex justify-between items-center mb-1">
-            <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-brand-cases"></span>
-              <span class="text-xs font-bold tracking-wider text-brand-cases uppercase">Cases</span>
-            </div>
-            <span class="text-[10px] text-slate-400 font-medium">Packaged Units</span>
-          </div>
-          <div class="flex items-baseline justify-between gap-2 mt-1">
-            <input type="text" inputmode="decimal" id="valCases" placeholder="0" 
-                   oninput="calcFromCases()" onfocus="handleFocus(this)" onblur="handleBlur(this, 1)"
-                   class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
-            <span class="font-mono text-xs font-semibold text-brand-cases/80">cs</span>
-          </div>
+        <div id="customPltWrapper">
+          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Custom Cases / Pallet</label>
+          <input type="text" inputmode="decimal" id="customPltInput" value="84" oninput="handleCustomChange()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-100">
         </div>
+      </div>
+    </section>
 
-        <!-- Barrels Card -->
-        <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-bbl rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
-          <div class="flex justify-between items-center mb-1">
-            <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-brand-bbl"></span>
-              <span class="text-xs font-bold tracking-wider text-brand-bbl uppercase">Barrels (BBL)</span>
-            </div>
-            <span class="text-[10px] text-slate-400 font-medium">31 US Gal / bbl</span>
+    <!-- Conversion Cards Grid -->
+    <main class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      
+      <!-- Cases Card -->
+      <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-cases rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-brand-cases"></span>
+            <span class="text-xs font-bold tracking-wider text-brand-cases uppercase">Cases</span>
           </div>
-          <div class="flex items-baseline justify-between gap-2 mt-1">
-            <input type="text" inputmode="decimal" id="valBbl" placeholder="0.00" 
-                   oninput="calcFromBbl()" onfocus="handleFocus(this)" onblur="handleBlur(this, 2)"
-                   class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
-            <span class="font-mono text-xs font-semibold text-brand-bbl/80">bbl</span>
-          </div>
+          <span class="text-[10px] text-slate-400 font-medium">Packaged Units</span>
         </div>
-
-        <!-- Pallets Card -->
-        <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-pallet rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
-          <div class="flex justify-between items-center mb-1">
-            <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-brand-pallet"></span>
-              <span class="text-xs font-bold tracking-wider text-brand-pallet uppercase">Pallets</span>
-            </div>
-            <span id="pltCardSubtext" class="text-[10px] text-slate-400 font-medium font-mono">@ 84 cs/plt</span>
-          </div>
-          <div class="flex items-baseline justify-between gap-2 mt-1">
-            <input type="text" inputmode="decimal" id="valPallets" placeholder="0.00" 
-                   oninput="calcFromPallets()" onfocus="handleFocus(this)" onblur="handleBlur(this, 2)"
-                   class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
-            <span class="font-mono text-xs font-semibold text-brand-pallet/80">plt</span>
-          </div>
+        <div class="flex items-baseline justify-between gap-2 mt-1">
+          <input type="text" inputmode="decimal" id="valCases" placeholder="0" 
+                 oninput="calcFromCases()" onfocus="handleFocus(this)" onblur="handleBlur(this, 1)"
+                 class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
+          <span class="font-mono text-xs font-semibold text-brand-cases/80">cs</span>
         </div>
+      </div>
 
-      </main>
-    </div>
+      <!-- Barrels Card -->
+      <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-bbl rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-brand-bbl"></span>
+            <span class="text-xs font-bold tracking-wider text-brand-bbl uppercase">Barrels (BBL)</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-medium">31 US Gal / bbl</span>
+        </div>
+        <div class="flex items-baseline justify-between gap-2 mt-1">
+          <input type="text" inputmode="decimal" id="valBbl" placeholder="0.00" 
+                 oninput="calcFromBbl()" onfocus="handleFocus(this)" onblur="handleBlur(this, 2)"
+                 class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
+          <span class="font-mono text-xs font-semibold text-brand-bbl/80">bbl</span>
+        </div>
+      </div>
 
-    <!-- Bottom Controls: Large Clear Button -->
-    <footer class="pt-5 pb-2">
-      <button onclick="clearAll()" class="w-full py-4 bg-slate-800 hover:bg-slate-700/80 active:bg-slate-900 border border-slate-700 text-slate-200 font-bold text-sm tracking-wider uppercase rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      <!-- Pallets Card -->
+      <div class="bg-brand-card/90 border border-brand-border focus-within:border-brand-pallet rounded-xl p-3.5 shadow-lg transition-colors flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-brand-pallet"></span>
+            <span class="text-xs font-bold tracking-wider text-brand-pallet uppercase">Pallets</span>
+          </div>
+          <span id="pltCardSubtext" class="text-[10px] text-slate-400 font-medium font-mono">@ 84 cs/plt</span>
+        </div>
+        <div class="flex items-baseline justify-between gap-2 mt-1">
+          <input type="text" inputmode="decimal" id="valPallets" placeholder="0.00" 
+                 oninput="calcFromPallets()" onfocus="handleFocus(this)" onblur="handleBlur(this, 2)"
+                 class="w-full bg-transparent font-mono text-3xl font-bold text-slate-100 placeholder-slate-600">
+          <span class="font-mono text-xs font-semibold text-brand-pallet/80">plt</span>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Clear Button directly below cards -->
+    <div class="mt-4">
+      <button onclick="clearAll()" class="w-full py-3.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-bold text-sm tracking-wider uppercase rounded-xl shadow-lg shadow-red-950/40 transition-colors flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
         Clear All Values
       </button>
-      <p class="text-[11px] text-slate-500 font-medium text-center mt-3">Ready for single-screen cover use or unfolded dashboard.</p>
-    </footer>
+    </div>
 
   </div>
 
